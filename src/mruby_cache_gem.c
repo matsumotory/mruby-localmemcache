@@ -210,6 +210,9 @@ Cache__set(mrb_state *mrb, mrb_value self){
   local_memcache_t *lmc = get_Cache(mrb, self);
   mrb_value key, value;
   mrb_get_args(mrb, "oo", &key, &value);
+  if (mrb_type(key) != MRB_TT_STRING || mrb_type(value) != MRB_TT_STRING ) {
+    mrb_raise(mrb, E_TYPE_ERROR, "both key and value must be STRING");
+  }
   if (!local_memcache_set(lmc, RSTRING_PTR(key), RSTRING_LEN(key), RSTRING_PTR(value), RSTRING_LEN(value))) { 
     rb_lmc_raise_exception(mrb, &lmc->error); 
   }
