@@ -50,11 +50,22 @@ typedef struct {
   int open;
 } rb_lmc_handle_t;
 
+typedef struct {
+  char *base;
+  size_t len;
+} mrb_cache_iovec_t;
+
 #define lmc_rb_sym_namespace(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "namespace"))
 #define lmc_rb_sym_filename(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "filename"))
 #define lmc_rb_sym_size_mb(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "size_mb"))
 #define lmc_rb_sym_min_alloc_size(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "min_alloc_size"))
 #define lmc_rb_sym_force(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "force"))
+
+static void mrb_cache_str_to_iovec(mrb_value str, mrb_cache_iovec_t *io)
+{
+  io->base = RSTRING_PTR(str);
+  io->len = RSTRING_LEN(str);
+}
 
 /* :nodoc: */
 static void __rb_lmc_raise_exception(mrb_state *mrb, const char *error_type, const char *m) {
@@ -201,14 +212,17 @@ Cache__disable_test_crash(mrb_state *mrb, mrb_value self){
  */
 static mrb_value
 Cache__get(mrb_state *mrb, mrb_value self) {
+  local_memcache_t *lmc = get_Cache(mrb, self);
   size_t l;
-  mrb_int n_key;
-  char *key;
+  mrb_cache_iovec_t k;
+  mrb_value key;
 
-  mrb_get_args(mrb, "s", &key, &n_key);
-  const char* r = local_memcache_get_new(get_Cache(mrb, self), key, n_key, &l);
-  printf("%s: %s => %s\n", __func__, key, r);
-  return lmc_ruby_string2(mrb, r, l);
+  mrb_get_args(mrb, "o", &key);
+  mrb_cache_str_to_iovec(key, &k);
+  const char* r = __local_memcache_get(lmc, k.base, k.len, &l);
+  mrb_value rr = lmc_ruby_string2(mrb, r, l);
+  lmc_unlock_shm_region("local_memcache_get", get_Cache(mrb, self));
+  return rr;
 }
 
 /* 
@@ -223,11 +237,17 @@ static mrb_value
 Cache__set(mrb_state *mrb, mrb_value self){
   local_memcache_t *lmc = get_Cache(mrb, self);
   mrb_value key, value;
+  mrb_cache_iovec_t k, v;
+
   mrb_get_args(mrb, "oo", &key, &value);
   if (mrb_type(key) != MRB_TT_STRING || mrb_type(value) != MRB_TT_STRING ) {
     mrb_raise(mrb, E_TYPE_ERROR, "both key and value must be STRING");
   }
-  if (!local_memcache_set(lmc, RSTRING_PTR(key), RSTRING_LEN(key), RSTRING_PTR(value), RSTRING_LEN(value))) { 
+
+  mrb_cache_str_to_iovec(key, &k);
+  mrb_cache_str_to_iovec(value, &v);
+
+  if (!local_memcache_set(lmc, k.base, k.len, v.base, v.len)) {
     rb_lmc_raise_exception(mrb, &lmc->error); 
   }
   return mrb_nil_value();

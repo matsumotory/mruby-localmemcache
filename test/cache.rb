@@ -34,7 +34,7 @@ assert('fetch deleted key') do
 end
 
 assert('insert data') do
-  c = $cache_x
+  c = Cache.new :namespace => "inert_data_test"
   c.clear
   assert_equal 0, c.size
 
