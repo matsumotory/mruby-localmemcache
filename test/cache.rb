@@ -46,13 +46,21 @@ assert('insert data') do
   1000.times { |i| assert_equal(i.to_s, c["#{i.to_s}_time"]) }
 
   assert_equal 1000, c.size
+  c.clear
 
+  # key <= 14 bytes
+  1000.times do |i|
+    c["#{i.to_s}_time_time"] = i.to_s
+    assert_equal i.to_s, c["#{i.to_s}_time_time"]
+  end
+  1000.times { |i| assert_equal(i.to_s, c["#{i.to_s}_time_time"]) }
+  assert_equal 1000, c.size
+
+  # key <= 17 bytes
   1000.times do |i|
     c["#{i.to_s}_time_time_time"] = i.to_s
     assert_equal i.to_s, c["#{i.to_s}_time_time_time"]
   end
-
   1000.times { |i| assert_equal(i.to_s, c["#{i.to_s}_time_time_time"]) }
-
-  assert_equal 2000, c.size
+  assert_equal 1000, c.size
 end
