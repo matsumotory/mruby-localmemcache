@@ -69,4 +69,6 @@ assert('insert data') do
     assert_equal i.to_s, c[key]
   end
   assert_equal 1000, c.size
+
+  assert_equal nil, (Cache.drop :namespace => "inert_data_test")
 end
