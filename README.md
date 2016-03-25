@@ -9,7 +9,7 @@ It's mrbgems.
 When you use in your project, please add below to your ``build_config.rb``.
 
 ```ruby
-  conf.gem :github => 'charlescui/mruby-cache'
+  conf.gem :github => 'matsumoto-r/mruby-cache'
 ```
 
 ## Description
