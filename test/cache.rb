@@ -8,43 +8,39 @@ $assertions = {
 	:failed => 0
 }
 
-def assert(title='')
-	$stderr.puts "***#{title}"
-	if block_given? and yield
-		$stderr.puts "--Success"
-		$assertions[:success] += 1
-	else
-		$stderr.puts "--Failed"
-		$assertions[:failed] += 1
-	end
-end
-
 setup
 
 assert('set value') do
-	($cache_x['test']='hello') == 'hello'
+	assert_equal ($cache_x['test']='hello'), 'hello'
 end
 
 assert('get value') do
-	$cache_x['test'] == $cache_y['test']
+	assert_equal $cache_x['test'], $cache_y['test']
 end
 
 assert('shm_status keys') do
 	status = $cache_x.shm_status
-	status.keys.sort == [:free_bytes, :free_chunks, :largest_chunk, :total_bytes, :used_bytes]
+	assert_equal status.keys.sort, [:free_bytes, :free_chunks, :largest_chunk, :total_bytes, :used_bytes]
 end
 
 assert('delete key') do
-	($cache_x.delete('test') == true) and ($cache_y.delete('test') == false)
+	assert_true $cache_x.delete('test')
+	assert_false $cache_y.delete('test')
 end
 
 assert('fetch deleted key') do
-	($cache_x['test'] == nil) and ($cache_y['test'] == nil)
+  assert_nil $cache_x['test']
+  assert_nil $cache_y['test']
 end
 
-total = $assertions[:success]+$assertions[:failed]
-$stderr.puts "\nTotal assertions:#{total}, success:#{$assertions[:success]}, failed:#{$assertions[:failed]}"
-
-
-
-
+assert('insert data') do
+  c = $cache_x
+  c.clear
+  assert_equal 0, c.size
+  1000.times { |i| c[i.to_s] = i.to_s }
+  assert_equal 1000, c.size
+  1000.times { |i| c["#{i.to_s}_time"] = i.to_s }
+  assert_equal 2000, c.size
+  1000.times { |i| c["#{i.to_s}_time_time_time"] = i.to_s }
+  assert_equal 3000, c.size
+end
