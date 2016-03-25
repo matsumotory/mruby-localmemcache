@@ -50,11 +50,11 @@ typedef struct {
   int open;
 } rb_lmc_handle_t;
 
-static mrb_value lmc_rb_sym_namespace;
-static mrb_value lmc_rb_sym_filename;
-static mrb_value lmc_rb_sym_size_mb;
-static mrb_value lmc_rb_sym_min_alloc_size;
-static mrb_value lmc_rb_sym_force;
+#define lmc_rb_sym_namespace(mrb) mrb_str_new_lit(mrb, "namespace")
+#define lmc_rb_sym_filename(mrb) mrb_str_new_lit(mrb, "filename")
+#define lmc_rb_sym_size_mb(mrb) mrb_str_new_lit(mrb, "size_mb")
+#define lmc_rb_sym_min_alloc_size(mrb) mrb_str_new_lit(mrb, "min_alloc_size")
+#define lmc_rb_sym_force(mrb) mrb_str_new_lit(mrb, "force")
 
 /* :nodoc: */
 void __rb_lmc_raise_exception(mrb_state *mrb, const char *error_type, const char *m) {
@@ -106,10 +106,10 @@ Cache_init(mrb_state *mrb, mrb_value self){
   lmc_error_t e;
   rb_lmc_handle_t *h;
   local_memcache_t *l = local_memcache_create(
-      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace)),
-      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename)), 
-      double_value(mrb_hash_get(mrb, o, lmc_rb_sym_size_mb)),
-      long_value(mrb_hash_get(mrb, o, lmc_rb_sym_min_alloc_size)), &e);
+      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace(mrb))),
+      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename(mrb))), 
+      double_value(mrb_hash_get(mrb, o, lmc_rb_sym_size_mb(mrb))),
+      long_value(mrb_hash_get(mrb, o, lmc_rb_sym_min_alloc_size(mrb))), &e);
 
   if (!l)  rb_lmc_raise_exception(mrb, &e);
 
@@ -169,9 +169,9 @@ Cache__drop(mrb_state *mrb, mrb_value self){
   lmc_check_dict(mrb, o);
   lmc_error_t e;
   if (!local_memcache_drop_namespace(
-      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace)), 
-      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename)),
-      bool_value(mrb_hash_get(mrb, o, lmc_rb_sym_force)), &e)) {
+      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace(mrb))), 
+      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename(mrb))),
+      bool_value(mrb_hash_get(mrb, o, lmc_rb_sym_force(mrb))), &e)) {
     rb_lmc_raise_exception(mrb, &e); 
   }
   return mrb_nil_value();
@@ -207,6 +207,7 @@ Cache__get(mrb_state *mrb, mrb_value self) {
 
   mrb_get_args(mrb, "s", &key, &n_key);
   const char* r = local_memcache_get_new(get_Cache(mrb, self), key, n_key, &l);
+  printf("%s: %s => %s\n", __func__, key, r);
   return lmc_ruby_string2(mrb, r, l);
 }
 
@@ -413,12 +414,6 @@ mrb_mruby_cache_gem_init(mrb_state *mrb) {
   mrb_define_method(mrb, Cache, "shm_status", Cache__shm_status, MRB_ARGS_NONE());
   mrb_define_method(mrb, Cache, "check_consistency", Cache__check_consistency, MRB_ARGS_NONE());
   // mrb_define_method(mrb, Cache, "keys", Cache__keys, MRB_ARGS_NONE());
-
-  lmc_rb_sym_namespace = (mrb_str_new_cstr(mrb, "namespace"));
-  lmc_rb_sym_filename = (mrb_str_new_cstr(mrb, "filename"));
-  lmc_rb_sym_size_mb = (mrb_str_new_cstr(mrb, "size_mb"));
-  lmc_rb_sym_min_alloc_size = (mrb_str_new_cstr(mrb, "min_alloc_size"));
-  lmc_rb_sym_force = (mrb_str_new_cstr(mrb, "force"));
   DONE;
 }
 
