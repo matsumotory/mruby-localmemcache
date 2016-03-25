@@ -50,7 +50,6 @@ typedef struct {
   int open;
 } rb_lmc_handle_t;
 
-static struct RClass *Cache;
 static mrb_value lmc_rb_sym_namespace;
 static mrb_value lmc_rb_sym_filename;
 static mrb_value lmc_rb_sym_size_mb;
@@ -62,7 +61,7 @@ void __rb_lmc_raise_exception(mrb_state *mrb, const char *error_type, const char
   mrb_sym eid;
   mrb_value k;
   eid = mrb_intern_cstr(mrb, error_type);
-  k = mrb_mod_cv_get(mrb, Cache, eid);
+  k = mrb_mod_cv_get(mrb, mrb_class_get(mrb, "Cache"), eid);
   mrb_raise(mrb, mrb_class_ptr(k), m);
 }
 
@@ -100,28 +99,43 @@ void lmc_check_dict(mrb_state *mrb, mrb_value o){
 
 /* :nodoc: */
 mrb_value
-Cache__new2(mrb_state *mrb, mrb_value self){
+Cache_init(mrb_state *mrb, mrb_value self){
   mrb_value o;
   mrb_get_args(mrb, "o", &o);
   lmc_check_dict(mrb, o);
   lmc_error_t e;
+  rb_lmc_handle_t *h;
   local_memcache_t *l = local_memcache_create(
       rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace)),
       rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename)), 
       double_value(mrb_hash_get(mrb, o, lmc_rb_sym_size_mb)),
       long_value(mrb_hash_get(mrb, o, lmc_rb_sym_min_alloc_size)), &e);
+
   if (!l)  rb_lmc_raise_exception(mrb, &e);
-  rb_lmc_handle_t *h = (rb_lmc_handle_t *)mrb_malloc(mrb, sizeof(rb_lmc_handle_t));
-  if (!h) mrb_raise(mrb, E_RUNTIME_ERROR, "memory allocation error");
+
+  h = (rb_lmc_handle_t *)DATA_PTR(self);
+  if (h) {
+    mrb_free(mrb, h);
+  }
+  DATA_TYPE(self) = &lmc_cache_type;
+  DATA_PTR(self) = NULL;
+
+  h = (rb_lmc_handle_t *)mrb_malloc(mrb, sizeof(rb_lmc_handle_t));
+  if (!h) {
+    mrb_raise(mrb, E_RUNTIME_ERROR, "memory allocation error");
+  }
+
   h->lmc = l;
   h->open = 1;
-  return mrb_obj_value((void *)Data_Wrap_Struct(mrb, mrb_class_ptr(self), &lmc_cache_type, h));
+
+  DATA_PTR(self) = h;
+
+  return self;
 }
 
 /* :nodoc: */
 local_memcache_t *get_Cache(mrb_state *mrb, mrb_value self) {
-  rb_lmc_handle_t *h;
-  Data_Get_Struct(mrb, self, &lmc_cache_type, h);
+  rb_lmc_handle_t *h =  DATA_PTR(self);
   return rb_lmc_check_handle_access(mrb, h);
 }
 
@@ -188,13 +202,12 @@ Cache__disable_test_crash(mrb_state *mrb, mrb_value self){
 mrb_value
 Cache__get(mrb_state *mrb, mrb_value self) {
   size_t l;
-  mrb_value key;
-  mrb_get_args(mrb, "o", &key);
-  const char* r = __local_memcache_get(get_Cache(mrb, self), 
-      RSTRING_PTR(key), RSTRING_LEN(key), &l);
-  mrb_value rr = lmc_ruby_string2(mrb, r, l);
-  lmc_unlock_shm_region("local_memcache_get", get_Cache(mrb, self));
-  return rr;
+  mrb_int n_key;
+  char *key;
+
+  mrb_get_args(mrb, "s", &key, &n_key);
+  const char* r = local_memcache_get_new(get_Cache(mrb, self), key, n_key, &l);
+  return lmc_ruby_string2(mrb, r, l);
 }
 
 /* 
@@ -255,8 +268,7 @@ Cache__delete(mrb_state *mrb, mrb_value self){
 mrb_value
 Cache__close(mrb_state *mrb, mrb_value self){
   lmc_error_t e;
-  rb_lmc_handle_t *h;
-  Data_Get_Struct(mrb, self, &lmc_cache_type, h);
+  rb_lmc_handle_t *h = DATA_PTR(self);
   if (!local_memcache_free(rb_lmc_check_handle_access(mrb, h), &e)) 
       rb_lmc_raise_exception(mrb, &e);
   h->open = 0;
@@ -318,8 +330,8 @@ Cache__shm_status(mrb_state *mrb, mrb_value self) {
 mrb_value
 Cache__check_consistency(mrb_state *mrb, mrb_value self) {
   lmc_error_t e;
-  rb_lmc_handle_t *h;
-  Data_Get_Struct(mrb, self, &lmc_cache_type, h);
+  rb_lmc_handle_t *h = DATA_PTR(self);
+
   return local_memcache_check_consistency(rb_lmc_check_handle_access(mrb, h), &e) ? 
       mrb_true_value() : mrb_false_value();
 }
@@ -378,15 +390,18 @@ Cache__check_consistency(mrb_state *mrb, mrb_value self) {
  */
 void 
 mrb_mruby_cache_gem_init(mrb_state *mrb) {
+  struct RClass *Cache;
   lmc_init();
   Cache = mrb_define_class(mrb, "Cache", mrb->object_class);
-  mrb_define_singleton_method(mrb, (struct RObject*)Cache, "_new", Cache__new2, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, Cache, "initialize", Cache_init, MRB_ARGS_REQ(1));
+
   mrb_define_singleton_method(mrb, (struct RObject*)Cache, "drop", 
       Cache__drop, MRB_ARGS_REQ(1));
   mrb_define_singleton_method(mrb, (struct RObject*)Cache, "disable_test_crash", 
       Cache__disable_test_crash, MRB_ARGS_NONE());
   mrb_define_singleton_method(mrb, (struct RObject*)Cache, "enable_test_crash", 
       Cache__enable_test_crash, MRB_ARGS_NONE());
+
   mrb_define_method(mrb, Cache, "get", Cache__get, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, Cache, "[]", Cache__get, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, Cache, "delete", Cache__delete, MRB_ARGS_REQ(1));
