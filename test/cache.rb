@@ -34,7 +34,7 @@ assert('fetch deleted key') do
 end
 
 assert('insert data') do
-  c = Cache.new :namespace => "inert_data_test"
+  c = Cache.new :namespace => "inert_data_test", :size_mb => 2048, :min_alloc_size => 256
   c.clear
   assert_equal 0, c.size
 
@@ -55,12 +55,18 @@ assert('insert data') do
   end
   1000.times { |i| assert_equal(i.to_s, c["#{i.to_s}_time_time"]) }
   assert_equal 1000, c.size
+  c.clear
 
-  # key <= 17 bytes
+  # 17 bytes <= key <= 19 bytes
   1000.times do |i|
-    c["#{i.to_s}_time_time_time"] = i.to_s
-    assert_equal i.to_s, c["#{i.to_s}_time_time_time"]
+    key = "#{i.to_s}_time_time_time"
+    c[key] = i.to_s
+    assert_equal i.to_s, c[key]
+    assert_equal i + 1, c.size
   end
-  1000.times { |i| assert_equal(i.to_s, c["#{i.to_s}_time_time_time"]) }
+  1000.times do |i|
+    key = "#{i.to_s}_time_time_time"
+    assert_equal i.to_s, c[key]
+  end
   assert_equal 1000, c.size
 end
