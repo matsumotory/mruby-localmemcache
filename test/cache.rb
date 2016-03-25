@@ -1,6 +1,6 @@
 def setup
-	$cache_x = Cache.new 'filename'=>"./foo.lmc", 'min_alloc_size' => 512
-	$cache_y = Cache.new 'filename'=>"./foo.lmc", 'min_alloc_size' => 512
+	$cache_x = Cache.new("filename" =>"./foo.lmc", "min_alloc_size" => 0, "size_mb" => 0)
+	$cache_y = Cache.new("filename" =>"./foo.lmc", "min_alloc_size" => 0, "size_mb" => 0)
 end
 
 $assertions = {
@@ -37,10 +37,10 @@ assert('insert data') do
   c = $cache_x
   c.clear
   assert_equal 0, c.size
-  1000.times { |i| c[i.to_s] = i.to_s }
+  1000.times { |i| c["#{i.to_s}_time"] = i.to_s; assert_equal(i.to_s, c["#{i.to_s}_time"]) }
+  1000.times { |i| assert_equal(i.to_s, c["#{i.to_s}_time"]) }
   assert_equal 1000, c.size
-  1000.times { |i| c["#{i.to_s}_time"] = i.to_s }
+  1000.times { |i| c["#{i.to_s}_time_time_time"] = i.to_s; assert_equal(i.to_s, c["#{i.to_s}_time_time_time"]) }
+  1000.times { |i| assert_equal(i.to_s, c["#{i.to_s}_time_time_time"]) }
   assert_equal 2000, c.size
-  1000.times { |i| c["#{i.to_s}_time_time_time"] = i.to_s }
-  assert_equal 3000, c.size
 end
