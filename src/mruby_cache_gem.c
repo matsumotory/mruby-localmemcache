@@ -50,11 +50,11 @@ typedef struct {
   int open;
 } rb_lmc_handle_t;
 
-#define lmc_rb_sym_namespace(mrb) mrb_str_new_lit(mrb, "namespace")
-#define lmc_rb_sym_filename(mrb) mrb_str_new_lit(mrb, "filename")
-#define lmc_rb_sym_size_mb(mrb) mrb_str_new_lit(mrb, "size_mb")
-#define lmc_rb_sym_min_alloc_size(mrb) mrb_str_new_lit(mrb, "min_alloc_size")
-#define lmc_rb_sym_force(mrb) mrb_str_new_lit(mrb, "force")
+#define lmc_rb_sym_namespace(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "namespace"))
+#define lmc_rb_sym_filename(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "filename"))
+#define lmc_rb_sym_size_mb(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "size_mb"))
+#define lmc_rb_sym_min_alloc_size(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "min_alloc_size"))
+#define lmc_rb_sym_force(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "force"))
 
 /* :nodoc: */
 void __rb_lmc_raise_exception(mrb_state *mrb, const char *error_type, const char *m) {
@@ -394,6 +394,8 @@ mrb_mruby_cache_gem_init(mrb_state *mrb) {
   struct RClass *Cache;
   lmc_init();
   Cache = mrb_define_class(mrb, "Cache", mrb->object_class);
+  MRB_SET_INSTANCE_TT(Cache, MRB_TT_DATA);
+
   mrb_define_method(mrb, Cache, "initialize", Cache_init, MRB_ARGS_REQ(1));
 
   mrb_define_singleton_method(mrb, (struct RObject*)Cache, "drop", 

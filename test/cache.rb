@@ -1,6 +1,6 @@
 def setup
-	$cache_x = Cache.new("filename" =>"./foo.lmc", "min_alloc_size" => 0, "size_mb" => 0)
-	$cache_y = Cache.new("filename" =>"./foo.lmc", "min_alloc_size" => 0, "size_mb" => 0)
+	$cache_x = Cache.new :filename =>"./foo.lmc", :min_alloc_size => 0, :size_mb => 0
+	$cache_y = Cache.new :filename =>"./foo.lmc", :min_alloc_size => 0, :size_mb => 0
 end
 
 $assertions = {
