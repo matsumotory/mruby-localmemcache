@@ -62,9 +62,7 @@ ht_hash_entry_t *ht_lookup(void *base, va_ht_hash_t va_ht, const char *key,
     size_t l = *(size_t *) s;
     if (l != n_key) continue;
     s += sizeof(size_t);
-    for (i = 0; i < l; i++) {
-      if (s[i] != key[i]) continue;
-    }
+    if (memcmp(s, key, l) != 0) continue;
     return hr;
   }
   return &lmc_null_node;
@@ -159,9 +157,7 @@ int ht_delete(void *base, va_ht_hash_t va_ht, const char *key, size_t n_key) {
     size_t l = *(size_t *) s;
     if (l != n_key) continue;
     s += sizeof(size_t);
-    for (i = 0; i < l; i++) {
-      if (s[i] != key[i]) continue;
-    }
+    if (memcmp(s, key, l) != 0) continue;
 
     ht_hash_entry_t *p = va_p ? base + va_p : 0;
     if (p) { p->va_next = hr->va_next; }
