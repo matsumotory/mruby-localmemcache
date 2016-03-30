@@ -30,6 +30,15 @@ size_t lmc_ht_strdup(void *base, const char *s, size_t l)
   return va_s;
 }
 
+size_t lmc_string_len(char *s)
+{
+  return *(size_t *)s;
+}
+char *lmc_string_data(char *s)
+{
+  return s + sizeof(size_t);
+}
+
 unsigned long ht_hash_key(const char *s, size_t l)
 {
   return lmc_hash(s, l) % LMC_HT_BUCKETS;
@@ -65,11 +74,7 @@ ht_hash_entry_t *ht_lookup(void *base, va_ht_hash_t va_ht, const char *key, size
     if (!hr)
       break;
     char *s = base + hr->va_key;
-    size_t l = *(size_t *)s;
-    if (l != n_key)
-      continue;
-    s += sizeof(size_t);
-    if (memcmp(s, key, l) != 0)
+    if (lmc_string_len(s) != n_key || memcmp(lmc_string_data(s), key, n_key) != 0)
       continue;
     return hr;
   }
@@ -87,17 +92,8 @@ const char *ht_get(void *base, va_ht_hash_t va_ht, const char *key, size_t n_key
   char *r = va ? base + va : 0;
   if (!r)
     return 0;
-  *n_value = *(size_t *)r;
-  return r + sizeof(size_t);
-}
-
-size_t lmc_string_len(char *s)
-{
-  return *(size_t *)s;
-}
-char *lmc_string_data(char *s)
-{
-  return s + sizeof(size_t);
+  *n_value = lmc_string_len(r);
+  return lmc_string_data(r);
 }
 
 int ht_redo(void *base, va_ht_hash_t va_ht, lmc_log_descriptor_t *l, lmc_error_t *e)
@@ -173,11 +169,7 @@ int ht_delete(void *base, va_ht_hash_t va_ht, const char *key, size_t n_key)
     if (!hr)
       break;
     char *s = base + hr->va_key;
-    size_t l = *(size_t *)s;
-    if (l != n_key)
-      continue;
-    s += sizeof(size_t);
-    if (memcmp(s, key, l) != 0)
+    if (lmc_string_len(s) != n_key || memcmp(lmc_string_data(s), key, n_key) != 0)
       continue;
 
     ht_hash_entry_t *p = va_p ? base + va_p : 0;
