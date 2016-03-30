@@ -60,17 +60,17 @@ assert('insert data') do
   c.clear
 
   # 17 bytes <= key <= 19 bytes
-  20000.times do |i|
+  1000.times do |i|
     key = "#{i.to_s}_time_time_time"
     c[key] = i.to_s
     assert_equal i.to_s, c[key]
     assert_equal i + 1, c.size
   end
-  20000.times do |i|
+  1000.times do |i|
     key = "#{i.to_s}_time_time_time"
     assert_equal i.to_s, c[key]
   end
-  assert_equal 20000, c.size
+  assert_equal 1000, c.size
 
   assert_equal nil, (Cache.drop :namespace => "inert_data_test")
 end
