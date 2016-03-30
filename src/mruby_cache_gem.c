@@ -14,9 +14,11 @@
 #define DONE mrb_gc_arena_restore(mrb, 0)
 
 /* :nodoc: */
-static long long_value(mrb_value i) { return mrb_nil_p(i) ? 0 : (long)mrb_fixnum(i); }
+static size_t size_t_value(mrb_value i) { return mrb_nil_p(i) ? 0 : (size_t)mrb_fixnum(i); }
 /* :nodoc: */
-static double double_value(mrb_state *mrb, mrb_value i) { return mrb_float(mrb_funcall(mrb, i, "to_f", 0)); }
+static double double_value(mrb_state *mrb, mrb_value i) {
+  return mrb_nil_p(i) ? 0.0 : mrb_float(mrb_funcall(mrb, i, "to_f", 0));
+}
 
 /* :nodoc: */
 static char *rstring_ptr(mrb_value s) { 
@@ -121,7 +123,7 @@ Cache_init(mrb_state *mrb, mrb_value self){
       rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace(mrb))),
       rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename(mrb))), 
       double_value(mrb, mrb_hash_get(mrb, o, lmc_rb_sym_size_mb(mrb))),
-      long_value(mrb_hash_get(mrb, o, lmc_rb_sym_min_alloc_size(mrb))), &e);
+      size_t_value(mrb_hash_get(mrb, o, lmc_rb_sym_min_alloc_size(mrb))), &e);
 
   if (!l)  rb_lmc_raise_exception(mrb, &e);
 
