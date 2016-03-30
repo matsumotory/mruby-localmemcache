@@ -54,7 +54,7 @@ typedef struct {
 
 typedef struct {
   char *base;
-  size_t len;
+  mrb_int len;
 } mrb_cache_iovec_t;
 
 #define lmc_rb_sym_namespace(mrb) mrb_symbol_value(mrb_intern_lit(mrb, "namespace"))
@@ -220,7 +220,7 @@ Cache__get(mrb_state *mrb, mrb_value self) {
   size_t l;
   mrb_cache_iovec_t k;
   char *key;
-  size_t n_key;
+  mrb_int n_key;
 
   mrb_get_args(mrb, "s", &key, &n_key);
   const char* r = __local_memcache_get(lmc, key, n_key, &l);
