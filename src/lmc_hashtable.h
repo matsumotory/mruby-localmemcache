@@ -21,7 +21,7 @@ typedef struct {
   size_t bucket_ofs;
 } ht_iter_status_t;
 
-#define LMC_HT_BUCKETS 20731
+#define LMC_HT_BUCKETS 307093
 #define LMC_ITERATOR_P(n) int ((n)) \
     (void *ctx, const char *key, const char *value)
 
