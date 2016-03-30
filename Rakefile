@@ -32,4 +32,4 @@ task :clean do
   sh "cd mruby && rake deep_clean"
 end
 
-task :default => :test
+task :default => :compile
