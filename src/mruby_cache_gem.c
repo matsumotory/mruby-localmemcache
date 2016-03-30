@@ -290,9 +290,11 @@ static mrb_value Cache__clear(mrb_state *mrb, mrb_value self)
  */
 static mrb_value Cache__delete(mrb_state *mrb, mrb_value self)
 {
-  mrb_value arg;
-  mrb_get_args(mrb, "o", &arg);
-  return bool_local_memcache_delete(get_Cache(mrb, self), RSTRING_PTR(arg), RSTRING_LEN(arg));
+  char *key;
+  mrb_int n_key;
+
+  mrb_get_args(mrb, "s", &key, &n_key);
+  return bool_local_memcache_delete(get_Cache(mrb, self), key, n_key);
 }
 
 /*
