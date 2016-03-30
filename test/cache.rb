@@ -1,6 +1,6 @@
 def setup
-	$cache_x = Cache.new :filename =>"./foo.lmc", :min_alloc_size => 0, :size_mb => 0
-	$cache_y = Cache.new :filename =>"./foo.lmc", :min_alloc_size => 0, :size_mb => 0
+	$cache_x = Cache.new :filename =>"./foo.lmc"
+	$cache_y = Cache.new :filename =>"./foo.lmc"
 end
 
 $assertions = {
@@ -34,7 +34,7 @@ assert('fetch deleted key') do
 end
 
 assert('insert data') do
-  c = Cache.new :namespace => "inert_data_test", :size_mb => 2048, :min_alloc_size => 256
+  c = Cache.new :namespace => "inert_data_test"
   c.clear
   assert_equal 0, c.size
 
