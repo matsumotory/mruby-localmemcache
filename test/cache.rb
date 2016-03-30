@@ -33,6 +33,8 @@ assert('fetch deleted key') do
   assert_nil $cache_y['test']
 end
 
+Cache.drop :filename =>"./foo.lmc"
+
 assert('insert data') do
   c = Cache.new :namespace => "inert_data_test"
   c.clear
