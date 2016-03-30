@@ -15,16 +15,13 @@ extern int lmc_test_crash_enabled;
 #endif
 
 #ifdef DO_TEST_ALLOC_FAILURE
-#define lmc_valloc(base, s) \
-    lmc_test_valloc_fail(__FILE__, __LINE__, __FUNCTION__, base, s)
+#define lmc_valloc(base, s) lmc_test_valloc_fail(__FILE__, __LINE__, __FUNCTION__, base, s)
 #endif
 
-void lmc_test_crash(const char* file, int line, const char *function);
-size_t lmc_test_valloc_fail(const char *file, int line, const char *function,
-    void *base, size_t s);
+void lmc_test_crash(const char *file, int line, const char *function);
+size_t lmc_test_valloc_fail(const char *file, int line, const char *function, void *base, size_t s);
 void lmc_clean_string(char *result, const char *source);
 int lmc_is_filename(const char *s);
 unsigned long lmc_hash(const char *s, size_t l);
 
 #endif
-

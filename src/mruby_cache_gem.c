@@ -14,37 +14,46 @@
 #define DONE mrb_gc_arena_restore(mrb, 0)
 
 /* :nodoc: */
-static size_t size_t_value(mrb_value i) { return mrb_nil_p(i) ? 0 : (size_t)mrb_fixnum(i); }
+static size_t size_t_value(mrb_value i)
+{
+  return mrb_nil_p(i) ? 0 : (size_t)mrb_fixnum(i);
+}
 /* :nodoc: */
-static double double_value(mrb_state *mrb, mrb_value i) {
+static double double_value(mrb_state *mrb, mrb_value i)
+{
   return mrb_nil_p(i) ? 0.0 : mrb_float(mrb_funcall(mrb, i, "to_f", 0));
 }
 
 /* :nodoc: */
-static char *rstring_ptr(mrb_value s) { 
-  char* r = mrb_nil_p(s) ? "nil" : RSTRING_PTR(s); 
+static char *rstring_ptr(mrb_value s)
+{
+  char *r = mrb_nil_p(s) ? "nil" : RSTRING_PTR(s);
   return r ? r : "nil";
 }
 
 /* :nodoc: */
-static char *rstring_ptr_null(mrb_value s) { 
-  char* r = mrb_nil_p(s) ? NULL : RSTRING_PTR(s); 
+static char *rstring_ptr_null(mrb_value s)
+{
+  char *r = mrb_nil_p(s) ? NULL : RSTRING_PTR(s);
   return r ? r : NULL;
 }
 
 /* :nodoc: */
-static int bool_value(mrb_value v) { return (mrb_type(v)); }
-
-/* :nodoc: */
-static mrb_value
-lmc_ruby_string2(mrb_state *mrb, const char *s, size_t l) { 
-  return s ? mrb_str_new(mrb, s, l) : mrb_nil_value(); 
+static int bool_value(mrb_value v)
+{
+  return (mrb_type(v));
 }
 
 /* :nodoc: */
-static mrb_value
-lmc_ruby_string(mrb_state *mrb, const char *s) { 
-  return lmc_ruby_string2(mrb, s + sizeof(size_t), *(size_t *) s);
+static mrb_value lmc_ruby_string2(mrb_state *mrb, const char *s, size_t l)
+{
+  return s ? mrb_str_new(mrb, s, l) : mrb_nil_value();
+}
+
+/* :nodoc: */
+static mrb_value lmc_ruby_string(mrb_state *mrb, const char *s)
+{
+  return lmc_ruby_string2(mrb, s + sizeof(size_t), *(size_t *)s);
 }
 
 typedef struct {
@@ -70,7 +79,8 @@ static void mrb_cache_str_to_iovec(mrb_state *mrb, mrb_value str, mrb_cache_iove
 }
 
 /* :nodoc: */
-static void __rb_lmc_raise_exception(mrb_state *mrb, const char *error_type, const char *m) {
+static void __rb_lmc_raise_exception(mrb_state *mrb, const char *error_type, const char *m)
+{
   mrb_sym eid;
   mrb_value k;
   eid = mrb_intern_cstr(mrb, error_type);
@@ -79,12 +89,14 @@ static void __rb_lmc_raise_exception(mrb_state *mrb, const char *error_type, con
 }
 
 /* :nodoc: */
-static void rb_lmc_raise_exception(mrb_state *mrb, lmc_error_t *e) {
+static void rb_lmc_raise_exception(mrb_state *mrb, lmc_error_t *e)
+{
   __rb_lmc_raise_exception(mrb, e->error_type, e->error_str);
 }
 
 /* :nodoc: */
-static local_memcache_t *rb_lmc_check_handle_access(mrb_state *mrb, rb_lmc_handle_t *h) {
+static local_memcache_t *rb_lmc_check_handle_access(mrb_state *mrb, rb_lmc_handle_t *h)
+{
   if (!h || (h->open == 0) || !h->lmc) {
     __rb_lmc_raise_exception(mrb, "MemoryPoolClosed", "Pool is closed");
     return 0;
@@ -92,40 +104,39 @@ static local_memcache_t *rb_lmc_check_handle_access(mrb_state *mrb, rb_lmc_handl
   return h->lmc;
 }
 
-#define LMC_CACHE_KEY            "$lmc_cache"
+#define LMC_CACHE_KEY "$lmc_cache"
 
-static const struct mrb_data_type lmc_cache_type = { 
-    LMC_CACHE_KEY, mrb_free
-};
+static const struct mrb_data_type lmc_cache_type = {LMC_CACHE_KEY, mrb_free};
 
-static mrb_value
-bool_local_memcache_delete(local_memcache_t *lmc, char *key, size_t n_key) {
-	return (local_memcache_delete(lmc, key, n_key) == 1) ? mrb_true_value() : mrb_false_value();
+static mrb_value bool_local_memcache_delete(local_memcache_t *lmc, char *key, size_t n_key)
+{
+  return (local_memcache_delete(lmc, key, n_key) == 1) ? mrb_true_value() : mrb_false_value();
 }
 
 /* :nodoc: */
-static void lmc_check_dict(mrb_state *mrb, mrb_value o){
+static void lmc_check_dict(mrb_state *mrb, mrb_value o)
+{
   if (mrb_type(o) != MRB_TT_HASH) {
     mrb_raise(mrb, E_ARGUMENT_ERROR, "expected a Hash");
   }
 }
 
 /* :nodoc: */
-static mrb_value
-Cache_init(mrb_state *mrb, mrb_value self){
+static mrb_value Cache_init(mrb_state *mrb, mrb_value self)
+{
   mrb_value o;
   mrb_get_args(mrb, "o", &o);
   lmc_check_dict(mrb, o);
   lmc_error_t e;
   rb_lmc_handle_t *h;
-  
-  local_memcache_t *l = local_memcache_create(
-      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace(mrb))),
-      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename(mrb))), 
-      double_value(mrb, mrb_hash_get(mrb, o, lmc_rb_sym_size_mb(mrb))),
-      size_t_value(mrb_hash_get(mrb, o, lmc_rb_sym_min_alloc_size(mrb))), &e);
 
-  if (!l)  rb_lmc_raise_exception(mrb, &e);
+  local_memcache_t *l = local_memcache_create(rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace(mrb))),
+                                              rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename(mrb))),
+                                              double_value(mrb, mrb_hash_get(mrb, o, lmc_rb_sym_size_mb(mrb))),
+                                              size_t_value(mrb_hash_get(mrb, o, lmc_rb_sym_min_alloc_size(mrb))), &e);
+
+  if (!l)
+    rb_lmc_raise_exception(mrb, &e);
 
   h = (rb_lmc_handle_t *)DATA_PTR(self);
   if (h) {
@@ -149,8 +160,9 @@ Cache_init(mrb_state *mrb, mrb_value self){
 }
 
 /* :nodoc: */
-static local_memcache_t *get_Cache(mrb_state *mrb, mrb_value self) {
-  rb_lmc_handle_t *h =  DATA_PTR(self);
+static local_memcache_t *get_Cache(mrb_state *mrb, mrb_value self)
+{
+  rb_lmc_handle_t *h = DATA_PTR(self);
   return rb_lmc_check_handle_access(mrb, h);
 }
 
@@ -169,53 +181,52 @@ static local_memcache_t *get_Cache(mrb_state *mrb, mrb_value self) {
  * know when a handle is not valid anymore, so only delete a memory pool if
  * you are sure that all handles are closed.
  *
- * valid options for drop are 
- * [:namespace] 
- * [:filename] 
- * [:force] 
+ * valid options for drop are
+ * [:namespace]
+ * [:filename]
+ * [:force]
  *
  * The memory pool must be specified by either setting the :filename or
  * :namespace option.  The default for :force is false.
  */
-static mrb_value
-Cache__drop(mrb_state *mrb, mrb_value self){
+static mrb_value Cache__drop(mrb_state *mrb, mrb_value self)
+{
   mrb_value o;
   mrb_get_args(mrb, "o", &o);
   lmc_check_dict(mrb, o);
   lmc_error_t e;
-  if (!local_memcache_drop_namespace(
-      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace(mrb))), 
-      rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename(mrb))),
-      bool_value(mrb_hash_get(mrb, o, lmc_rb_sym_force(mrb))), &e)) {
-    rb_lmc_raise_exception(mrb, &e); 
+  if (!local_memcache_drop_namespace(rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_namespace(mrb))),
+                                     rstring_ptr_null(mrb_hash_get(mrb, o, lmc_rb_sym_filename(mrb))),
+                                     bool_value(mrb_hash_get(mrb, o, lmc_rb_sym_force(mrb))), &e)) {
+    rb_lmc_raise_exception(mrb, &e);
   }
   return mrb_nil_value();
 }
 
 /* :nodoc: */
-static mrb_value
-Cache__enable_test_crash(mrb_state *mrb, mrb_value self){
+static mrb_value Cache__enable_test_crash(mrb_state *mrb, mrb_value self)
+{
   srand(getpid());
   lmc_test_crash_enabled = 1;
   return mrb_nil_value();
 }
 
 /* :nodoc: */
-static mrb_value
-Cache__disable_test_crash(mrb_state *mrb, mrb_value self){
+static mrb_value Cache__disable_test_crash(mrb_state *mrb, mrb_value self)
+{
   lmc_test_crash_enabled = 0;
   return mrb_nil_value();
 }
 
-/* 
+/*
  *  call-seq:
  *     lmc.get(key)   ->   string value or nil
  *     lmc[key]       ->   string value or nil
  *
  *  Retrieve string value from hashtable.
  */
-static mrb_value
-Cache__get(mrb_state *mrb, mrb_value self) {
+static mrb_value Cache__get(mrb_state *mrb, mrb_value self)
+{
   local_memcache_t *lmc = get_Cache(mrb, self);
   size_t l;
   mrb_cache_iovec_t k;
@@ -223,13 +234,13 @@ Cache__get(mrb_state *mrb, mrb_value self) {
   mrb_int n_key;
 
   mrb_get_args(mrb, "s", &key, &n_key);
-  const char* r = __local_memcache_get(lmc, key, n_key, &l);
+  const char *r = __local_memcache_get(lmc, key, n_key, &l);
   mrb_value rr = lmc_ruby_string2(mrb, r, l);
   lmc_unlock_shm_region("local_memcache_get", lmc);
   return rr;
 }
 
-/* 
+/*
  *  call-seq:
  *     lmc.set(key, value)   ->   Qnil
  *     lmc[key]=value        ->   Qnil
@@ -237,14 +248,14 @@ Cache__get(mrb_state *mrb, mrb_value self) {
  *  Set value for key in hashtable.  Value and key will be converted to
  *  string.
  */
-static mrb_value
-Cache__set(mrb_state *mrb, mrb_value self){
+static mrb_value Cache__set(mrb_state *mrb, mrb_value self)
+{
   local_memcache_t *lmc = get_Cache(mrb, self);
   mrb_value key, value;
   mrb_cache_iovec_t k, v;
 
   mrb_get_args(mrb, "oo", &key, &value);
-  if (mrb_type(key) != MRB_TT_STRING || mrb_type(value) != MRB_TT_STRING ) {
+  if (mrb_type(key) != MRB_TT_STRING || mrb_type(value) != MRB_TT_STRING) {
     mrb_raise(mrb, E_TYPE_ERROR, "both key and value must be STRING");
   }
 
@@ -252,118 +263,116 @@ Cache__set(mrb_state *mrb, mrb_value self){
   mrb_cache_str_to_iovec(mrb, value, &v);
 
   if (!local_memcache_set(lmc, k.base, k.len, v.base, v.len)) {
-    rb_lmc_raise_exception(mrb, &lmc->error); 
+    rb_lmc_raise_exception(mrb, &lmc->error);
   }
   return mrb_nil_value();
 }
 
-
 /*
- *  call-seq: 
+ *  call-seq:
  *     lmc.clear -> Qnil
  *
  *  Clears content of hashtable.
  */
-static mrb_value
-Cache__clear(mrb_state *mrb, mrb_value self){
+static mrb_value Cache__clear(mrb_state *mrb, mrb_value self)
+{
   local_memcache_t *lmc = get_Cache(mrb, self);
-  if (!local_memcache_clear(lmc)) rb_lmc_raise_exception(mrb, &lmc->error); 
+  if (!local_memcache_clear(lmc))
+    rb_lmc_raise_exception(mrb, &lmc->error);
   return mrb_nil_value();
 }
 
-/* 
+/*
  *  call-seq:
  *     lmc.delete(key)   ->   Qnil
  *
  *  Deletes key from hashtable.  The key is converted to string.
  */
-static mrb_value
-Cache__delete(mrb_state *mrb, mrb_value self){
+static mrb_value Cache__delete(mrb_state *mrb, mrb_value self)
+{
   mrb_value arg;
   mrb_get_args(mrb, "o", &arg);
   return bool_local_memcache_delete(get_Cache(mrb, self), RSTRING_PTR(arg), RSTRING_LEN(arg));
 }
 
-/* 
+/*
  *  call-seq:
  *     lmc.close()   ->   Qnil
  *
  *  Releases hashtable.
  */
-static mrb_value
-Cache__close(mrb_state *mrb, mrb_value self){
+static mrb_value Cache__close(mrb_state *mrb, mrb_value self)
+{
   lmc_error_t e;
   rb_lmc_handle_t *h = DATA_PTR(self);
-  if (!local_memcache_free(rb_lmc_check_handle_access(mrb, h), &e)) 
-      rb_lmc_raise_exception(mrb, &e);
+  if (!local_memcache_free(rb_lmc_check_handle_access(mrb, h), &e))
+    rb_lmc_raise_exception(mrb, &e);
   h->open = 0;
   return mrb_nil_value();
 }
 
-/* 
+/*
  *  call-seq:
  *     lmc.size -> number
  *
  *  Number of pairs in the hashtable.
  */
-static mrb_value
-Cache__size(mrb_state *mrb, mrb_value self) {
+static mrb_value Cache__size(mrb_state *mrb, mrb_value self)
+{
   local_memcache_t *lmc = get_Cache(mrb, self);
   ht_hash_t *ht = lmc->base + lmc->va_hash;
   return mrb_fixnum_value(ht->size);
 }
 
-/* 
+/*
  *  call-seq:
  *     lmc.shm_status -> hash
  *
  *  Some status information on the shared memory:
  *
- *    :total_bytes # the total size of the shm in bytes 
- *    :used_bytes  # how many bytes are used in this shm 
+ *    :total_bytes # the total size of the shm in bytes
+ *    :used_bytes  # how many bytes are used in this shm
  *                 # For exmpty namespaces this will reflect the amount
- *                 # of memory used for the hash buckets and some other 
+ *                 # of memory used for the hash buckets and some other
  *                 # administrative data structures.
- *    :free_bytes  # how many bytes are free 
+ *    :free_bytes  # how many bytes are free
  */
 
-static mrb_value
-Cache__shm_status(mrb_state *mrb, mrb_value self) {
+static mrb_value Cache__shm_status(mrb_state *mrb, mrb_value self)
+{
   mrb_value hash = mrb_hash_new(mrb);
-  
-  local_memcache_t *lmc = get_Cache(mrb, self);
-  if (!lmc_lock_shm_region("shm_status", lmc)) return mrb_nil_value();
-  lmc_mem_status_t ms = lmc_status(lmc->base, "shm_status");
-  if (!lmc_unlock_shm_region("shm_status", lmc)) return mrb_nil_value();
 
-  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "free_bytes")), 
-      mrb_fixnum_value(ms.total_free_mem));
-  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "total_bytes")), 
-      mrb_fixnum_value(ms.total_shm_size));
-  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "used_bytes")), mrb_fixnum_value(
-      ms.total_shm_size - ms.total_free_mem));
-  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "free_chunks")), mrb_fixnum_value(
-      ms.free_chunks));
-  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "largest_chunk")), mrb_fixnum_value(
-      ms.largest_chunk));
+  local_memcache_t *lmc = get_Cache(mrb, self);
+  if (!lmc_lock_shm_region("shm_status", lmc))
+    return mrb_nil_value();
+  lmc_mem_status_t ms = lmc_status(lmc->base, "shm_status");
+  if (!lmc_unlock_shm_region("shm_status", lmc))
+    return mrb_nil_value();
+
+  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "free_bytes")), mrb_fixnum_value(ms.total_free_mem));
+  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "total_bytes")), mrb_fixnum_value(ms.total_shm_size));
+  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "used_bytes")),
+               mrb_fixnum_value(ms.total_shm_size - ms.total_free_mem));
+  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "free_chunks")), mrb_fixnum_value(ms.free_chunks));
+  mrb_hash_set(mrb, hash, mrb_symbol_value(mrb_intern_cstr(mrb, "largest_chunk")), mrb_fixnum_value(ms.largest_chunk));
   return hash;
 }
 
-/* 
+/*
  * internal, do not use
  */
-static mrb_value
-Cache__check_consistency(mrb_state *mrb, mrb_value self) {
+static mrb_value Cache__check_consistency(mrb_state *mrb, mrb_value self)
+{
   lmc_error_t e;
   rb_lmc_handle_t *h = DATA_PTR(self);
 
-  return local_memcache_check_consistency(rb_lmc_check_handle_access(mrb, h), &e) ? 
-      mrb_true_value() : mrb_false_value();
+  return local_memcache_check_consistency(rb_lmc_check_handle_access(mrb, h), &e) ? mrb_true_value()
+                                                                                  : mrb_false_value();
 }
 
 /*
  * Document-class: Cache
- * 
+ *
  * <code>Cache</code> provides for a Hashtable of strings in shared
  * memory (via a memory mapped file), which thus can be shared between
  * processes on a computer.  Here is an example of its usage:
@@ -399,22 +408,22 @@ Cache__check_consistency(mrb_state *mrb, mrb_value self) {
  *
  *  == Clearing memory pools
  *
- *  Removing memory pools can be done with Cache.drop(options). 
+ *  Removing memory pools can be done with Cache.drop(options).
  *
  *  == Environment
- *  
+ *
  *  If you use the :namespace parameter, the .lmc file for your namespace will
  *  reside in /var/tmp/Cache.  This can be overriden by setting the
  *  LMC_NAMESPACES_ROOT_PATH variable in the environment.
  *
  *  == Storing Ruby Objects
  *
- *  If you want to store Ruby objects instead of just strings, consider 
+ *  If you want to store Ruby objects instead of just strings, consider
  *  using Cache::SharedObjectStorage.
  *
  */
-void 
-mrb_mruby_cache_gem_init(mrb_state *mrb) {
+void mrb_mruby_cache_gem_init(mrb_state *mrb)
+{
   struct RClass *Cache;
   lmc_init();
   Cache = mrb_define_class(mrb, "Cache", mrb->object_class);
@@ -422,12 +431,11 @@ mrb_mruby_cache_gem_init(mrb_state *mrb) {
 
   mrb_define_method(mrb, Cache, "initialize", Cache_init, MRB_ARGS_REQ(1));
 
-  mrb_define_singleton_method(mrb, (struct RObject*)Cache, "drop", 
-      Cache__drop, MRB_ARGS_REQ(1));
-  mrb_define_singleton_method(mrb, (struct RObject*)Cache, "disable_test_crash", 
-      Cache__disable_test_crash, MRB_ARGS_NONE());
-  mrb_define_singleton_method(mrb, (struct RObject*)Cache, "enable_test_crash", 
-      Cache__enable_test_crash, MRB_ARGS_NONE());
+  mrb_define_singleton_method(mrb, (struct RObject *)Cache, "drop", Cache__drop, MRB_ARGS_REQ(1));
+  mrb_define_singleton_method(mrb, (struct RObject *)Cache, "disable_test_crash", Cache__disable_test_crash,
+                              MRB_ARGS_NONE());
+  mrb_define_singleton_method(mrb, (struct RObject *)Cache, "enable_test_crash", Cache__enable_test_crash,
+                              MRB_ARGS_NONE());
 
   mrb_define_method(mrb, Cache, "get", Cache__get, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, Cache, "[]", Cache__get, MRB_ARGS_REQ(1));
@@ -443,7 +451,6 @@ mrb_mruby_cache_gem_init(mrb_state *mrb) {
   DONE;
 }
 
-void
-mrb_mruby_cache_gem_final(mrb_state* mrb)
+void mrb_mruby_cache_gem_final(mrb_state *mrb)
 {
 }

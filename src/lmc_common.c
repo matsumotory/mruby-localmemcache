@@ -12,12 +12,15 @@
 int lmc_test_crash_enabled = 0;
 int lmc_showed_status = 0;
 
-void lmc_test_crash(const char* file, int line, const char *function) {
+void lmc_test_crash(const char *file, int line, const char *function)
+{
   if (!lmc_showed_status) {
     lmc_showed_status = 1;
     printf("lmc_test_crash enabled\n");
   }
-  if (!lmc_test_crash_enabled) { return; }
+  if (!lmc_test_crash_enabled) {
+    return;
+  }
   int r = rand();
   if ((r & 63) == 0) {
     printf("[%s:%d %s %d] CRASHING: %d\n", file, line, function, getpid(), r);
@@ -28,8 +31,8 @@ void lmc_test_crash(const char* file, int line, const char *function) {
 
 #undef lmc_valloc
 
-size_t lmc_test_valloc_fail(const char *file, int line, const char *function,
-    void *base, size_t s) {
+size_t lmc_test_valloc_fail(const char *file, int line, const char *function, void *base, size_t s)
+{
   if (!lmc_showed_status) {
     lmc_showed_status = 1;
     printf("lmc_test_valloc enabled\n");
@@ -42,18 +45,19 @@ size_t lmc_test_valloc_fail(const char *file, int line, const char *function,
   return lmc_valloc(base, s);
 }
 
-void lmc_clean_string(char *result, const char *source) {
+void lmc_clean_string(char *result, const char *source)
+{
   size_t nn = strlen(source);
   size_t n = nn;
-  if (n > 1023) { n = 1023; }
+  if (n > 1023) {
+    n = 1023;
+  }
   const char *s = source + nn - n;
   char *d = result;
   char ch;
   for (; n--; d++, s++) {
     ch = *s;
-    if ((ch >= 'a' && ch <= 'z') || 
-        (ch >= 'A' && ch <= 'Z') ||
-	(ch >= '0' && ch <= '9')) {
+    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')) {
       *d = ch;
     } else {
       *d = '-';
@@ -62,13 +66,17 @@ void lmc_clean_string(char *result, const char *source) {
   *d = 0x0;
 }
 
-unsigned long lmc_hash(const char *s, size_t l) {
+unsigned long lmc_hash(const char *s, size_t l)
+{
   unsigned long v;
   size_t i;
-  for (v = 0, i = 0; i++ < l; s++) { v = *s + 31 * v; }
+  for (v = 0, i = 0; i++ < l; s++) {
+    v = *s + 31 * v;
+  }
   return v;
 }
 
-int lmc_is_filename(const char *s) {
+int lmc_is_filename(const char *s)
+{
   return strlen(s) > 1 && (s[0] == '/' || (s[0] == '.' && s[1] == '/'));
 }

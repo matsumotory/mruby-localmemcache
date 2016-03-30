@@ -15,14 +15,14 @@ typedef struct {
 } lmc_mem_status_t;
 
 typedef struct {
-   int op_id;
-   size_t p1;
-   size_t p2;
+  int op_id;
+  size_t p1;
+  size_t p2;
 } lmc_log_descriptor_t;
 
 typedef struct {
   size_t first_free;
-  size_t dummy2;  // dummy for next
+  size_t dummy2; // dummy for next
   size_t total_size;
   size_t magic;
   size_t va_hash;
@@ -36,7 +36,6 @@ typedef struct {
   size_t next;
   size_t size;
 } lmc_mem_chunk_descriptor_t;
-
 
 size_t lmc_valloc(void *base, size_t size);
 void lmc_free(void *base, size_t chunk);

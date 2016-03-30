@@ -15,10 +15,10 @@
 #define LOCAL_MEMCACHE_FAILED 0
 #define LOCAL_MEMCACHE_SUCCESS 1
 
-/*                                                                              
- * This should be called once after LocalMemCache has been loaded.              
- */                                                                             
-void lmc_init();        
+/*
+ * This should be called once after LocalMemCache has been loaded.
+ */
+void lmc_init();
 
 /*
  * LocalMemCache provides for a Hashtable of strings in shared memory (via a
@@ -27,10 +27,10 @@ void lmc_init();
  *
  * #include <stdio.h>
  * #include <localmemcache.h>
- * 
+ *
  * int main() {
  *   lmc_error_t e;
- *   // To use a filename instead of a namespace: 
+ *   // To use a filename instead of a namespace:
  *   // lmc = local_memcache_create(0, "filename.lmc", 0, &e);
  *   local_memcache_t *lmc = local_memcache_create("viewcounters", 0, 0, &e);
  *   if (!lmc) {
@@ -47,13 +47,13 @@ void lmc_init();
  *     fprintf(stderr, "Failed to release localmemcache: %s\n", e.error_str);
  *     return 1;
  *   }
- * 
+ *
  *   return 0;
- * 
+ *
  * failed:
  *   fprintf(stderr, "%s\n", lmc->error.error_str);
  *   return 1;
- * 
+ *
  * }
  *
  *  == Default sizes of memory pools
@@ -74,10 +74,10 @@ void lmc_init();
  *
  *  == Clearing memory pools
  *
- *  Removing memory pools can be done with LocalMemCache.drop(options). 
+ *  Removing memory pools can be done with LocalMemCache.drop(options).
  *
  *  == Environment
- *  
+ *
  *  If you use the :namespace parameter, the .lmc file for your namespace will
  *  reside in /var/tmp/localmemcache.  This can be overriden by setting the
  *  LMC_NAMESPACES_ROOT_PATH variable in the environment.
@@ -91,13 +91,13 @@ typedef struct {
   size_t va_hash;
   lmc_lock_t *lock;
   lmc_lock_t *root_lock;
-  void* base;
+  void *base;
   lmc_error_t error;
 } local_memcache_t;
 
 /*
  *  Creates a new handle for accessing a shared memory region.
- * 
+ *
  *  lmc_error_t e;
  *  // open via namespace
  *  local_memcache_t *lmc = local_memcache_create("viewcounters", 0, 0, 0, &e);
@@ -105,7 +105,7 @@ typedef struct {
  *  local_memcache_t *lmc = local_memcache_create(0, "./foo.lmc", 0, 0, &e);
  *  // open via filename + min_alloc_size set
  *  local_memcache_t *lmc = local_memcache_create(0, "./foo.lmc", 0, 1024, &e);
- * 
+ *
  *  You must supply at least a namespace or filename parameter
  *
  *  The size_mb defaults to 1024 (1 GB).
@@ -125,28 +125,25 @@ typedef struct {
  *  hold the empty hashtable (about 100K), so the size_mb refers
  *  only to the maximum size of the memory pool.  .new for an already existing
  *  memory pool will only map the already previously allocated RAM into the
- *  virtual address space of your process.  
+ *  virtual address space of your process.
  */
-local_memcache_t *local_memcache_create(const char *namespace, 
-    const char *filename, double size_mb, size_t min_alloc_size, 
-    lmc_error_t* e);
+local_memcache_t *local_memcache_create(const char *namespace, const char *filename, double size_mb,
+                                        size_t min_alloc_size, lmc_error_t *e);
 
-/* 
+/*
  *  Retrieve string value from hashtable.
  *
  *  It will return a newly allocated string which you need to free() after use.
  */
-char *local_memcache_get_new(local_memcache_t *lmc, const char *key, 
-    size_t n_key, size_t *n_value);
+char *local_memcache_get_new(local_memcache_t *lmc, const char *key, size_t n_key, size_t *n_value);
 
-/* 
+/*
  *  Set string value in hashtable.
  */
-int local_memcache_set(local_memcache_t *lmc, const char *key, size_t n_key, 
-    const char* value, size_t n_value);
+int local_memcache_set(local_memcache_t *lmc, const char *key, size_t n_key, const char *value, size_t n_value);
 
-/* 
- *  Deletes key from hashtable.  
+/*
+ *  Deletes key from hashtable.
  */
 int local_memcache_delete(local_memcache_t *lmc, char *key, size_t n_key);
 
@@ -185,8 +182,7 @@ int local_memcache_free(local_memcache_t *lmc, lmc_error_t *e);
  * triggering the automatic recovery.)
  *
  */
-int local_memcache_iterate(local_memcache_t *lmc, void *ctx, ht_iter_status_t *s,
-    LMC_ITERATOR_P(iter));
+int local_memcache_iterate(local_memcache_t *lmc, void *ctx, ht_iter_status_t *s, LMC_ITERATOR_P(iter));
 
 /*
  *  Retrieves random pair from hashtable.
@@ -194,8 +190,7 @@ int local_memcache_iterate(local_memcache_t *lmc, void *ctx, ht_iter_status_t *s
  *  It will return a newly allocated strings for r_key and r_value which you
  *  will need to free() after use.
  */
-int local_memcache_random_pair_new(local_memcache_t *lmc, 
-    char **r_key, size_t *n_key, char **r_value, size_t *n_value);
+int local_memcache_random_pair_new(local_memcache_t *lmc, char **r_key, size_t *n_key, char **r_value, size_t *n_value);
 
 /*
  * Deletes a memory pool.  If force is 1, locked semaphores are
@@ -211,28 +206,23 @@ int local_memcache_random_pair_new(local_memcache_t *lmc,
  * you are sure that all handles are closed.
  *
  * The memory pool must be specified by either setting the filename or
- * namespace parameter.  
+ * namespace parameter.
  */
-int local_memcache_drop_namespace(const char *namespace, const char *filename,
-    int force, lmc_error_t *e);
+int local_memcache_drop_namespace(const char *namespace, const char *filename, int force, lmc_error_t *e);
 /*
  * Tries to repair a corrupt namespace.  Usually one doesn't call this method
  * directly, it's invoked automatically when operations time out.
  *
  * The memory pool must be specified by either setting the filename or
- * namespace parameter. 
+ * namespace parameter.
  */
-int local_memcache_check_namespace(const char *namespace, const char *filename, 
-    lmc_error_t *e);
-
+int local_memcache_check_namespace(const char *namespace, const char *filename, lmc_error_t *e);
 
 /* internal, do not use */
-const char *__local_memcache_get(local_memcache_t *lmc, 
-    const char *key, size_t n_key, size_t *n_value);
+const char *__local_memcache_get(local_memcache_t *lmc, const char *key, size_t n_key, size_t *n_value);
 
 /* internal, do not use */
-int __local_memcache_random_pair(local_memcache_t *lmc, 
-    char **r_key, size_t *n_key, char **r_value, size_t *n_value);
+int __local_memcache_random_pair(local_memcache_t *lmc, char **r_key, size_t *n_key, char **r_value, size_t *n_value);
 
 /* internal, do not use */
 int lmc_lock_shm_region(const char *who, local_memcache_t *lmc);

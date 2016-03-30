@@ -13,14 +13,14 @@ typedef struct {
 } lmc_lock_t;
 
 lmc_lock_t *lmc_lock_init(const char *namespace, int init, lmc_error_t *e);
-void lmc_lock_free(lmc_lock_t* l);
-int lmc_lock_obtain(const char *where, lmc_lock_t* l, lmc_error_t *e);
-int lmc_lock_obtain_mandatory(const char *where, lmc_lock_t* l, lmc_error_t *e);
-int lmc_lock_release(const char *where, lmc_lock_t* l, lmc_error_t *e);
+void lmc_lock_free(lmc_lock_t *l);
+int lmc_lock_obtain(const char *where, lmc_lock_t *l, lmc_error_t *e);
+int lmc_lock_obtain_mandatory(const char *where, lmc_lock_t *l, lmc_error_t *e);
+int lmc_lock_release(const char *where, lmc_lock_t *l, lmc_error_t *e);
 
-int lmc_is_locked(lmc_lock_t* l, lmc_error_t *e);
-int lmc_is_lock_working(lmc_lock_t* l, lmc_error_t *e);
+int lmc_is_locked(lmc_lock_t *l, lmc_error_t *e);
+int lmc_is_lock_working(lmc_lock_t *l, lmc_error_t *e);
 void lmc_lock_repair(lmc_lock_t *l);
-int lmc_lock_get_value(lmc_lock_t* l);
+int lmc_lock_get_value(lmc_lock_t *l);
 int lmc_clear_namespace_lock(const char *namespace);
 #endif
