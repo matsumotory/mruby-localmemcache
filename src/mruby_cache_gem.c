@@ -135,6 +135,7 @@ Cache_init(mrb_state *mrb, mrb_value self){
   DATA_PTR(self) = NULL;
 
   h = (rb_lmc_handle_t *)mrb_malloc(mrb, sizeof(rb_lmc_handle_t));
+  memset(h, 0, sizeof(rb_lmc_handle_t));
   if (!h) {
     mrb_raise(mrb, E_RUNTIME_ERROR, "memory allocation error");
   }
@@ -218,13 +219,13 @@ Cache__get(mrb_state *mrb, mrb_value self) {
   local_memcache_t *lmc = get_Cache(mrb, self);
   size_t l;
   mrb_cache_iovec_t k;
-  mrb_value key;
+  char *key;
+  size_t n_key;
 
-  mrb_get_args(mrb, "o", &key);
-  mrb_cache_str_to_iovec(mrb, key, &k);
-  const char* r = __local_memcache_get(lmc, k.base, k.len, &l);
+  mrb_get_args(mrb, "s", &key, &n_key);
+  const char* r = __local_memcache_get(lmc, key, n_key, &l);
   mrb_value rr = lmc_ruby_string2(mrb, r, l);
-  lmc_unlock_shm_region("local_memcache_get", get_Cache(mrb, self));
+  lmc_unlock_shm_region("local_memcache_get", lmc);
   return rr;
 }
 
