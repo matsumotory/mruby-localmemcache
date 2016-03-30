@@ -152,6 +152,9 @@ unlock_and_fail:
 release_and_fail:
    lmc_lock_release("local_memcache_create", lmc->lock, e);
 failed:
+#ifdef __APPLE__
+   lmc_lock_release("local_memcache_create", lmc->lock, e);
+#endif
   *ok = 0;
   free(lmc);
   return NULL;

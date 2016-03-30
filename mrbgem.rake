@@ -6,5 +6,6 @@ MRuby::Gem::Specification.new('mruby-cache') do |spec|
   else
     spec.linker.libraries << ['pthread', 'rt']
   end
+  spec.cc.flags << '-g3 -O0'
   spec.add_dependency "mruby-print", :core => "mruby-print"
 end
