@@ -60,7 +60,16 @@ int lmc_is_locked(lmc_lock_t* l, lmc_error_t *e) {
 
 int lmc_sem_timed_wait(lmc_lock_t* l) {
 #ifdef __APPLE__
-  return sem_wait(l->sem);
+  int ret;
+  int time = 0;
+  while (time < 2) {
+    ret = sem_trywait(l->sem);
+    if (ret == 0)
+      return ret;
+    sleep(1);
+    time += 1;
+  }
+  return ret;
 #else
   struct timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);

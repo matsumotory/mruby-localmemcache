@@ -1,4 +1,4 @@
-# mruby-cache
+# mruby-cache   [![Build Status](https://travis-ci.org/matsumoto-r/mruby-cache.png?branch=master)](https://travis-ci.org/matsumoto-r/mruby-cache)
 
 it's based on [localmemcache](https://github.com/sck/localmemcache).
 

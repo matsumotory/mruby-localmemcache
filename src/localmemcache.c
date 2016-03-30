@@ -152,6 +152,9 @@ unlock_and_fail:
 release_and_fail:
    lmc_lock_release("local_memcache_create", lmc->lock, e);
 failed:
+#ifdef __APPLE__
+   lmc_lock_release("local_memcache_create", lmc->lock, e);
+#endif
   *ok = 0;
   free(lmc);
   return NULL;
@@ -164,7 +167,7 @@ local_memcache_t *local_memcache_create(const char *namespace,
   double s = size_mb == 0.0 ? 1024.0 : size_mb;
   size_t si = s * 1024 * 1024;
   if (si < 1024 * 1024) { si =  1024 * 1024; }
-  //printf("size: %f, s: %f, si: %zd\n", size_mb, s, si);
+  //printf("size: %f, s: %f, si: %zd, size_mb: %f, min_alloc_size: %zd\n", size_mb, s, si, size_mb, min_alloc_size);
   if (!lmc_namespace_or_filename((char *)clean_ns, namespace, filename, e))
       return 0;
   return __local_memcache_create((char *)clean_ns, si, min_alloc_size, 0, 0, e);
