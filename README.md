@@ -80,3 +80,8 @@ Cache.drop :filename =>"./foo.lmc"
 
 Feel free to open tickets or send pull requests with improvements.
 Thanks in advance for your help!
+
+## License
+under the MIT License:
+- see [LICENSE file](/LICENSE)
+
