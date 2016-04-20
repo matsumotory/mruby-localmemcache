@@ -146,7 +146,6 @@ static mrb_value Cache_init(mrb_state *mrb, mrb_value self)
   DATA_PTR(self) = NULL;
 
   h = (rb_lmc_handle_t *)mrb_malloc(mrb, sizeof(rb_lmc_handle_t));
-  memset(h, 0, sizeof(rb_lmc_handle_t));
   if (!h) {
     mrb_raise(mrb, E_RUNTIME_ERROR, "memory allocation error");
   }
