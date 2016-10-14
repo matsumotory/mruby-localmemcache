@@ -68,7 +68,6 @@ ht_hash_entry_t *ht_lookup(void *base, va_ht_hash_t va_ht, const char *key, size
   va_ht_hash_entry_t va_hr;
   ht_hash_entry_t *hr = &lmc_null_node;
   ht_hash_t *ht = base + va_ht;
-  size_t i;
   for (va_hr = ht->va_buckets[ht_hash_key(key, n_key)]; va_hr != 0; va_hr = hr->va_next) {
     hr = va_hr ? base + va_hr : 0;
     if (!hr)
@@ -162,7 +161,6 @@ int ht_delete(void *base, va_ht_hash_t va_ht, const char *key, size_t n_key)
   ht_hash_entry_t *hr = &lmc_null_node;
   size_t va_p = 0;
   ht_hash_t *ht = base + va_ht;
-  size_t i;
   unsigned long k = ht_hash_key(key, n_key);
   for (va_hr = ht->va_buckets[k]; va_hr != 0; va_p = va_hr, va_hr = hr->va_next) {
     hr = va_hr ? base + va_hr : 0;

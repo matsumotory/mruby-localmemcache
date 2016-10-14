@@ -228,7 +228,6 @@ static mrb_value Cache__get(mrb_state *mrb, mrb_value self)
 {
   local_memcache_t *lmc = get_Cache(mrb, self);
   size_t l;
-  mrb_cache_iovec_t k;
   char *key;
   mrb_int n_key;
 
