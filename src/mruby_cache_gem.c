@@ -25,11 +25,13 @@ static double double_value(mrb_state *mrb, mrb_value i)
 }
 
 /* :nodoc: */
+/*
 static char *rstring_ptr(mrb_value s)
 {
   char *r = mrb_nil_p(s) ? "nil" : RSTRING_PTR(s);
   return r ? r : "nil";
 }
+*/
 
 /* :nodoc: */
 static char *rstring_ptr_null(mrb_value s)
@@ -51,10 +53,12 @@ static mrb_value lmc_ruby_string2(mrb_state *mrb, const char *s, size_t l)
 }
 
 /* :nodoc: */
+/*
 static mrb_value lmc_ruby_string(mrb_state *mrb, const char *s)
 {
   return lmc_ruby_string2(mrb, s + sizeof(size_t), *(size_t *)s);
 }
+*/
 
 typedef struct {
   local_memcache_t *lmc;
