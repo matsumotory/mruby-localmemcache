@@ -108,9 +108,28 @@ static local_memcache_t *rb_lmc_check_handle_access(mrb_state *mrb, rb_lmc_handl
   return h->lmc;
 }
 
+/* :nodoc: */
+static void rb_lmc_cache_destructor(mrb_state *mrb, void *p)
+{
+  rb_lmc_handle_t *h;
+  lmc_error_t e;
+
+  h = (rb_lmc_handle_t *)p;
+  if (!h || (h->open == 0) || !h->lmc)
+    return;
+
+  if (!local_memcache_free(h->lmc, &e)) {
+    mrb_free(mrb, p);
+    rb_lmc_raise_exception(mrb, &e);
+    return;
+  }
+
+  mrb_free(mrb, p);
+}
+
 #define LMC_CACHE_KEY "$lmc_cache"
 
-static const struct mrb_data_type lmc_cache_type = {LMC_CACHE_KEY, mrb_free};
+static const struct mrb_data_type lmc_cache_type = {LMC_CACHE_KEY, rb_lmc_cache_destructor};
 
 static mrb_value bool_local_memcache_delete(local_memcache_t *lmc, char *key, size_t n_key)
 {
