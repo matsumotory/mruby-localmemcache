@@ -333,6 +333,12 @@ const char *__local_memcache_get(local_memcache_t *lmc, const char *key, size_t 
   return r;
 }
 
+const char *__local_memcache_get_by_no_lock(local_memcache_t *lmc, const char *key, size_t n_key, size_t *n_value)
+{
+  const char *r = ht_get(lmc->base, lmc->va_hash, key, n_key, n_value);
+  return r;
+}
+
 char *local_memcache_get_new(local_memcache_t *lmc, const char *key, size_t n_key, size_t *n_value)
 {
   const char *r = __local_memcache_get(lmc, key, n_key, n_value);

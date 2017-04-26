@@ -263,6 +263,25 @@ static mrb_value Cache__get(mrb_state *mrb, mrb_value self)
 
 /*
  *  call-seq:
+ *     lmc.get_by_no_lock(key)   ->   string value or nil
+ *
+ *  Retrieve string value from hashtable without obtain a semaphore.
+ */
+static mrb_value Cache__get_by_no_lock(mrb_state *mrb, mrb_value self)
+{
+  local_memcache_t *lmc = get_Cache(mrb, self);
+  size_t l;
+  char *key;
+  mrb_int n_key;
+
+  mrb_get_args(mrb, "s", &key, &n_key);
+  const char *r = __local_memcache_get_by_no_lock(lmc, key, n_key, &l);
+  mrb_value rr = lmc_ruby_string2(mrb, r, l);
+  return rr;
+}
+
+/*
+ *  call-seq:
  *     lmc.set(key, value)   ->   Qnil
  *     lmc[key]=value        ->   Qnil
  *
@@ -462,6 +481,7 @@ void mrb_mruby_cache_gem_init(mrb_state *mrb)
 
   mrb_define_method(mrb, Cache, "get", Cache__get, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, Cache, "[]", Cache__get, MRB_ARGS_REQ(1));
+  mrb_define_method(mrb, Cache, "get_by_no_lock", Cache__get_by_no_lock, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, Cache, "delete", Cache__delete, MRB_ARGS_REQ(1));
   mrb_define_method(mrb, Cache, "set", Cache__set, MRB_ARGS_REQ(2));
   mrb_define_method(mrb, Cache, "clear", Cache__clear, MRB_ARGS_NONE());
