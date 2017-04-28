@@ -18,6 +18,10 @@ assert('get value') do
 	assert_equal $cache_x['test'], $cache_y['test']
 end
 
+assert('get_by_no_lock value') do
+	assert_equal $cache_x.get_by_no_lock('test'), $cache_y.get_by_no_lock('test')
+end
+
 assert('shm_status keys') do
 	status = $cache_x.shm_status
 	assert_equal status.keys.sort, [:free_bytes, :free_chunks, :largest_chunk, :total_bytes, :used_bytes]

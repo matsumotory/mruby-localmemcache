@@ -222,6 +222,9 @@ int local_memcache_check_namespace(const char *namespace, const char *filename, 
 const char *__local_memcache_get(local_memcache_t *lmc, const char *key, size_t n_key, size_t *n_value);
 
 /* internal, do not use */
+const char *__local_memcache_get_by_no_lock(local_memcache_t *lmc, const char *key, size_t n_key, size_t *n_value);
+
+/* internal, do not use */
 int __local_memcache_random_pair(local_memcache_t *lmc, char **r_key, size_t *n_key, char **r_value, size_t *n_value);
 
 /* internal, do not use */
