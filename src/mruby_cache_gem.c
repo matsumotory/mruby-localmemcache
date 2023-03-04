@@ -7,6 +7,7 @@
 #include "mruby/variable.h"
 #include "mruby/string.h"
 #include "mruby/array.h"
+#include "mruby/internal.h"
 #include <sys/types.h>
 #include <unistd.h>
 #include "localmemcache.h"
