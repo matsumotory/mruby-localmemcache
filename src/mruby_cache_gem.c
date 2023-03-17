@@ -7,7 +7,7 @@
 #include "mruby/variable.h"
 #include "mruby/string.h"
 #include "mruby/array.h"
-#if MRUBY_RELEASE_MAJOR >= 3 && MRUBY_RELEASE_MINOR >= 2
+#if MRUBY_RELEASE_MAJOR > 3 || (MRUBY_RELEASE_MAJOR == 3 && MRUBY_RELEASE_MINOR >= 2)
 #include "mruby/internal.h"
 #endif
 #include <sys/types.h>
